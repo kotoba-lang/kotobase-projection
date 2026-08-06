@@ -1,7 +1,8 @@
 (ns kotobase.projection-test
   (:require [clojure.test :refer [deftest is testing]]
             [ipld.core :as ipld]
-            [kotobase.projection :as view]))
+            [kotobase.projection :as view]
+            [kotobase.blockcodec.node :as bcn]))
 
 (defn- entries [n]
   (mapv (fn [i]
@@ -381,3 +382,43 @@
           {:view-id :bytes :epoch 1 :entries (take 1 entries)
            :max-block-bytes (dec (get-in single
                                          [:bundle :node "blocks" 0 "length"]))})))))
+
+;; ---------------------------------------------------------------------------
+;; ADR-2608060500 phase 1: view blocks can be READ compressed
+;; ---------------------------------------------------------------------------
+;;
+;; Nothing writes them yet. Measured on real view-block shapes, compression is
+;; worth having here — 0.098-0.105 with plaintext values, and still 0.43 when
+;; every value is ciphertext, because the canonical keys are half the block —
+;; but the read path has to exist everywhere first.
+
+(deftest decode-range-reads-a-compressed-block
+  (let [built (view/build-view {:view-id :posts :epoch 1
+                                :block-rows 200 :entries (entries 200)})
+        block (first (:blocks built))
+        node (:node block)
+        compressed (bcn/encode-node node)]
+    (is (bcn/envelope? (ipld/decode compressed))
+        "the fixture must really be compressed, or this proves nothing")
+    (testing "a compressed block decodes to the same node"
+      ;; The descriptor names the CID of whatever is stored, so a compressed
+      ;; block is addressed by its own bytes — as it will be when the writer
+      ;; flips. Building the descriptor here keeps that honest rather than
+      ;; substituting representations under one key.
+      (let [descriptor {"cid" (ipld/link (ipld/cid compressed))}]
+        (is (= node (view/decode-range descriptor compressed)))))
+    (testing "and the CID check still rejects tampering"
+      (let [descriptor {"cid" (ipld/link (ipld/cid compressed))}
+            corrupt #?(:clj (aclone ^bytes compressed) :cljs (.slice compressed))]
+        #?(:clj (aset-byte ^bytes corrupt 0 (byte (bit-xor 1 (aget ^bytes corrupt 0))))
+           :cljs (aset corrupt 0 (bit-xor 1 (aget corrupt 0))))
+        (is (thrown? #?(:clj Exception :cljs js/Error)
+                     (view/decode-range descriptor corrupt)))))))
+
+(deftest decode-range-is-the-identity-on-existing-blocks
+  (let [built (view/build-view {:view-id :posts :epoch 1
+                                :block-rows 10 :entries (entries 10)})
+        descriptor (first (get-in built [:bundle :node "blocks"]))
+        bytes (:bytes (first (:blocks built)))]
+    (is (= (:node (first (:blocks built))) (view/decode-range descriptor bytes))
+        "blocks written before the frame existed read through unchanged")))

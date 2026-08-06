@@ -5,7 +5,8 @@
   packed into one large object.  A small immutable query bundle maps key ranges
   to byte ranges, so a browser can answer a bounded query with one bundle fetch
   and one HTTP Range request without a local database."
-  (:require [ipld.core :as ipld]))
+  (:require [ipld.core :as ipld]
+            [kotobase.blockcodec.node :as bcn]))
 
 (def format-version 1)
 (def ^:private bloom-bits-per-key 10)
@@ -529,7 +530,15 @@
     (when-not (= expected actual)
       (throw (ex-info "Materialized view block CID mismatch"
                       {:expected expected :actual actual})))
-    (ipld/decode bytes)))
+    ;; ADR-2608060500 phase 1. `decode-node` is the identity on every block
+    ;; written so far, so this changes nothing today; it is what lets a
+    ;; compressed view block be read once one is written. The CID check above
+    ;; is unaffected — it is over the STORED bytes either way.
+    ;;
+    ;; This is the single decode point for view blocks (`kotobase-peer`'s
+    ;; `materialized-view` namespace re-exports it rather than duplicating it),
+    ;; so one line covers the read path.
+    (bcn/decode-node bytes)))
 
 (defn finish-logical-blocks-rows
   "Verify/decode already decrypted logical blocks in descriptor order. Async

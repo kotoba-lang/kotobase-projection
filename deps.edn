@@ -2,7 +2,13 @@
  :deps {io.github.kotoba-lang/io-ipld
         {:git/sha "e08dc3b2ab705be292e388cd1ad136381544a041"}
         io.github.kotoba-lang/merkle-lsm
-        {:git/sha "202c365c86b6ac0d5e9a3329f6f05d5a076878b5"}}
+        {:git/sha "202c365c86b6ac0d5e9a3329f6f05d5a076878b5"}
+        ;; Reader half of ADR-2608060500. `decode-node` is the identity on
+        ;; every block written so far, so nothing changes today — it makes
+        ;; this library able to read a compressed materialized-view block,
+        ;; which has to be true everywhere before anything writes one.
+        io.github.kotoba-lang/kotobase-block-codec
+        {:git/sha "f03bcef355975067060af55e23e9c8bbfb0bc362"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner
