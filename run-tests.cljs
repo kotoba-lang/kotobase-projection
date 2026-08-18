@@ -10,19 +10,20 @@
   JVM and red under nbb for reasons production does not have (SCI deftype
   behaviour), so `.cljc` alone is not grounds.
 
-
-  ⚠ **This does not run on a fleet node yet, and the reason is not this repo's
-  code.** Its transitive git pins reach several libraries at two different
-  shas, and `gates/nbb-cross-runtime.cljs` puts every (lib, sha) it walks on
-  the classpath -- tools.deps resolves such a diamond to one version, that walk
-  cannot. Measured 2026-08-18: the suite dies at `Cannot read properties of
-  undefined (reading 'lastIndexOf')` inside a CID decode, with nothing wrong
-  here. The entry is committed so the work is done when the pins are aligned.
+  Runs on a fleet node as of 2026-08-18. It did not before, and the reason
+  was never this repo's code: its transitive git pins reached several
+  libraries at two shas each, and `gates/nbb-cross-runtime.cljs` puts every
+  (lib, sha) it walks on the classpath -- tools.deps resolves such a diamond
+  to one version, that walk cannot, so the suite died at `Cannot read
+  properties of undefined (reading 'lastIndexOf')` inside a CID decode. The
+  pins were collapsed leaf-first and the test that reached back into
+  kotobase-peer was moved there, which removed the cycle that kept them from
+  ever agreeing. The gate script now prints no CONFLICT line and reports
+  34 tests / 130 assertions -- the same counts as `clojure -M:test`.
 
       npx nbb --classpath src:test run-tests.cljs"
   (:require [cljs.test :as t]
             [kotobase.projection-test]
-            [kotobase.projection.datalog-test]
             [kotobase.projection.publication-test]
             [kotobase.projection.statistics-test]))
 
@@ -31,5 +32,8 @@
     (js/process.exit 1)))
 
 ;; A pattern, not a second list of namespaces to run: a runner that repeats
-;; the list can fall behind the suite and report a subset as a pass.
+;; the list can fall behind the suite and report a subset as a pass. It fell
+;; behind once already -- it named kotobase.projection.datalog-test after that
+;; test moved to kotobase-peer, and nbb refused to start rather than run the
+;; rest and call it a pass.
 (t/run-all-tests #"^kotobase\.projection.*-test$")
