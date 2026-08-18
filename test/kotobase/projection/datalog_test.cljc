@@ -117,7 +117,7 @@
                 {:clause-index 1 :index :avet :after "x"}
                 {:clause-index 0 :index :avet :after ""}]]
     (is (thrown-with-msg?
-         #?(:clj clojure.lang.ExceptionInfo :cljs cljs.core.ExceptionInfo)
+         #?(:clj clojure.lang.ExceptionInfo :cljs ExceptionInfo)
          #"Invalid join frontier"
          (materialization/build-frontier-work-chain
           {:snapshot :after :remaining [0]
@@ -127,7 +127,7 @@
 
 (deftest join-frontier-single-oversized-binding-fails-closed
   (is (thrown-with-msg?
-       #?(:clj clojure.lang.ExceptionInfo :cljs cljs.core.ExceptionInfo)
+       #?(:clj clojure.lang.ExceptionInfo :cljs ExceptionInfo)
        #"exceeds work byte budget"
        (materialization/build-frontier-work-chain
         {:snapshot :after :remaining [0]
