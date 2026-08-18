@@ -1,0 +1,8 @@
+{
+  "name": "kotobase-projection",
+  "private": true,
+  "description": "npm deps this repo's own suite needs. It is consumed as a shadow-cljs :source-path, so a consumer supplies these at build time -- but a gate running the suite ALONE has no consumer, and without a package.json it cannot install them. Measured 2026-08-18: the suite died at Cannot find module '@noble/hashes/sha2.js' before any assertion ran.",
+  "devDependencies": {
+    "@noble/hashes": "^2.0.0"
+  }
+}
