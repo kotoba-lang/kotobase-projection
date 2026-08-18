@@ -1,6 +1,28 @@
 (ns kotobase.projection.publication
   "Atomic epoch root for base Merkle-LSM state and derived query artifacts."
-  (:require [ipld.core :as ipld]))
+  (:require [clojure.walk :as walk]
+            [ipld.core :as ipld]))
+
+(defn- data-model
+  "A domain map, as an IPLD Data Model value.
+
+  The Data Model has string map keys and nothing else. This code embedded
+  Clojure maps whose keys are keywords (`:epoch`, `:rows`) straight into
+  nodes, and older io-ipld accepted them because its ENCODER stringifies a
+  keyword on the way out. `io-ipld` f99bf27d validates first and refuses,
+  which is the right call rather than a regression: an encoder that maps both
+  `{:a 1}` and `{\"a\" 1}` onto one CID gives two distinct values the same
+  content address, and content addressing is the one place that must not
+  happen.
+
+  **Byte-neutral.** Measured 2026-08-18 against io-ipld e08dc3b2, the sha this
+  repo pinned before: `{\"value\" {:epoch 7 :rows 3}}` and
+  `{\"value\" {\"epoch\" 7 \"rows\" 3}}` encode to the same CID
+  (bafyreifh6mf4h3va26p46no3owk4kj6khe56xgad3kaf4qi25ymqovqodm). So every
+  block already published keeps its address; this changes what is legal to
+  hand the encoder, not what comes out of it."
+  [m]
+  (walk/stringify-keys m))
 
 (def format-version 1)
 
@@ -68,7 +90,7 @@
                     "version" format-version
                     "db-id" (str db-id)
                     "epoch" epoch
-                    "value" statistics})
+                    "value" (data-model statistics)})
           root-node
           (cond-> {"format" "kotobase/epoch-publication"
                    "version" format-version
