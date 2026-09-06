@@ -12,7 +12,10 @@ codec, and readers locate the named object and verify logical blocks. Existing
 objects and bundles are not rewritten. The in-memory reader remains compatible
 with historical DAG-CBOR-labelled pack addresses. External stores must treat
 pack links as opaque object addresses rather than decode them as metadata.
-Do not merge until consumers that assume every CID is DAG-CBOR are audited.
+The inspected `kotobase-peer` object-store paths use CID as an opaque key; its
+materialized-view CLJS suite passed against this implementation (17 tests / 77
+assertions). Other deployable consumers must verify their resolved pins and
+object handling during rollout. Merge is not evidence of live deployment.
 
 `stored-cid` identifies ciphertext, while `cid` identifies plaintext. This patch
 corrects writing their identities; it does not add ciphertext-CID verification
@@ -25,4 +28,4 @@ offset/length, coalescing, and delta-chain semantics must retain their behavior.
 Current range upper bounds are inclusive; an OrderedMap half-open API needs an
 explicit adapter.
 
-See [the proposed cross-repository ADR](https://github.com/kotoba-lang/kotobase/blob/agent/ipld-adl-carv2-selector-20260906/docs/adr/2609060000-ipld-adl-selector-car-boundaries.md).
+See [the accepted cross-repository ADR](https://github.com/com-junkawasaki/root/blob/main/90-docs/adr/2609060000-ipld-adl-selector-car-boundaries.edn).
