@@ -2,6 +2,9 @@
 
 Portable, storage-neutral derived query artifacts for Kotobase.
 
+New opaque packs and ciphertext use raw CIDs. See the
+[codec migration and compatibility notes](docs/opaque-object-codecs.md).
+
 This capability owns materialized query bundles, query statistics, and the
 atomic publication shape that binds derived artifacts to one immutable base
 manifest and logical epoch. It returns immutable values and declarative block,

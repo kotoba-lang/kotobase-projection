@@ -1,6 +1,7 @@
 (ns kotobase.projection-test
   (:require [clojure.test :refer [deftest is testing]]
             [ipld.core :as ipld]
+            [multiformats.core :as mf]
             [kotobase.projection :as view]
             [kotobase.blockcodec.node :as bcn]))
 
@@ -42,6 +43,36 @@
     (is (= 10 (get bundle "count")))
     (is (= (:pack-cid a) (ipld/link-cid (get bundle "pack-cid"))))
     (is (= [:object/put :block/put] (mapv :effect/type (:effects a))))))
+
+(deftest opaque-objects-use-raw-cids-and-logical-blocks-remain-dag-cbor
+  (doseq [encrypt? [false true]
+          n [0 1 5]]
+    (let [built (view/build-view
+                 (cond-> {:view-id :codec-test :epoch 1 :block-rows 2
+                          :entries (entries n)}
+                   encrypt? (assoc :key-id "test-key"
+                                   :encrypt-block-fn (test-encryptor 42))))
+          bundle (get-in built [:bundle :node])]
+      (is (= 0x55 (:codec (mf/cid->parts (:pack-cid built)))))
+      (is (= (mf/cidv1-raw (:pack-bytes built)) (:pack-cid built)))
+      (is (= 0x71 (:codec (mf/cid->parts (get-in built [:bundle :cid])))))
+      (doseq [block (:blocks built)]
+        (is (= 0x71 (:codec (mf/cid->parts (:cid block)))))
+        (when encrypt?
+          (is (= 0x55 (:codec (mf/cid->parts (:stored-cid block)))))
+          (is (= (mf/cidv1-raw (:stored-bytes block)) (:stored-cid block)))))
+      (is (= (mapv :value (entries n))
+             (:values (view/query-packed bundle (:pack-bytes built) {}
+                                         (when encrypt?
+                                           (test-decryptor {"test-key" 42})))))))))
+
+(deftest legacy-pack-address-remains-readable
+  (let [built (view/build-view {:view-id :legacy :epoch 1 :block-rows 2
+                                :entries (entries 5)})
+        legacy-bundle (assoc (get-in built [:bundle :node]) "pack-cid"
+                             (ipld/link (ipld/cid (:pack-bytes built))))]
+    (is (= (mapv :value (entries 5))
+           (:values (view/query-packed legacy-bundle (:pack-bytes built) {}))))))
 
 (deftest query-statistics-are-deterministic-scoped-bundle-metadata
   (let [statistics [{:pattern [nil "name" nil] :rows 101}
