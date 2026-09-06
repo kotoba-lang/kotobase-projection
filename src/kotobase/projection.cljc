@@ -6,6 +6,7 @@
   to byte ranges, so a browser can answer a bounded query with one bundle fetch
   and one HTTP Range request without a local database."
   (:require [ipld.core :as ipld]
+            [multiformats.core :as mf]
             [kotobase.blockcodec.node :as bcn]))
 
 (def format-version 1)
@@ -145,7 +146,7 @@
              :encryption {"algorithm" algorithm
                           "key-id" key-id
                           "nonce" nonce}
-             :stored-cid (ipld/cid bytes)))))
+             :stored-cid (mf/cidv1-raw bytes)))))
 
 (defn- partition-view-rows
   [view-id epoch block-rows max-block-bytes rows]
@@ -228,7 +229,7 @@
                      (partition-view-rows view-id epoch block-rows
                                           max-block-bytes rows))
         pack-bytes (concat-bytes (map :stored-bytes blocks))
-        pack-cid (ipld/cid pack-bytes)
+        pack-cid (mf/cidv1-raw pack-bytes)
         descriptors (loop [offset 0, blocks blocks, result []]
                       (if-let [block (first blocks)]
                         (let [length (byte-count (:stored-bytes block))
