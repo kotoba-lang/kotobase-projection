@@ -1,7 +1,7 @@
 (ns kotobase.projection.datalog
   "Differential maintenance for Datalog-backed IPLD materialized views."
   (:require [clojure.set :as set]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [ipld.core :as ipld]
             [kotobase.projection.publication :as publication]
             [kotobase.projection :as view]
