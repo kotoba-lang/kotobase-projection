@@ -19,9 +19,9 @@
   pins were collapsed leaf-first and the test that reached back into
   kotobase-peer was moved there, which removed the cycle that kept them from
   ever agreeing. The gate script now prints no CONFLICT line and reports
-  34 tests / 130 assertions -- the same counts as `clojure -M:test`.
+  34 tests / 130 assertions -- the same counts as `kbb -M:test`.
 
-      npx nbb --classpath src:test run-tests.cljk"
+      kbb --backend sci --classpath src:test run-tests.cljk"
   (:require [cljs.test :as t]
             [kotobase.projection-test]
             [kotobase.projection.publication-test]

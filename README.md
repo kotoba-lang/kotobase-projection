@@ -24,6 +24,6 @@ The code was extracted from `kotobase-peer`. New projection behavior belongs
 here; the old namespaces are compatibility surfaces during migration.
 
 ```sh
-clojure -M:test
-clojure -M:lint
+kbb -M:test
+kbb -M:lint
 ```
