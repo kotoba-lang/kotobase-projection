@@ -21,7 +21,7 @@
   ever agreeing. The gate script now prints no CONFLICT line and reports
   34 tests / 130 assertions -- the same counts as `clojure -M:test`.
 
-      npx nbb --classpath src:test run-tests.cljs"
+      npx nbb --classpath src:test run-tests.cljk"
   (:require [cljs.test :as t]
             [kotobase.projection-test]
             [kotobase.projection.publication-test]
