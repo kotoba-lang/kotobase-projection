@@ -1,5 +1,5 @@
 (ns kotobase.projection.statistics-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [kotobase.projection.statistics :as statistics]
             [merkle-lsm.core :as lsm]))
 

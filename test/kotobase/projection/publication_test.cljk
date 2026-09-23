@@ -1,5 +1,5 @@
 (ns kotobase.projection.publication-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [ipld.core :as ipld]
             [kotobase.projection.publication :as publication]
             [kotobase.projection :as view]
