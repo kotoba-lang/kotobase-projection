@@ -6,7 +6,7 @@
    materialized query views updated atomically with manifest publishes.
 
    All functions return immutable data. No effects are executed here."
-  (:require [clojure.set]))
+  (:require [kotoba.lang.coll]))
 
 ;; ============================================================================
 ;; Cardinality Histograms
@@ -129,7 +129,7 @@
   (loop [remaining (vec clauses), bound #{}, result []]
     (if (empty? remaining)
       result
-      (let [connected? (fn [clause] (seq (clojure.set/intersection bound (:vars clause))))
+      (let [connected? (fn [clause] (seq (kotoba.lang.coll/intersection bound (:vars clause))))
             candidates (if (seq bound)
                          (let [connected (filter connected? remaining)]
                            (if (seq connected) connected remaining))
